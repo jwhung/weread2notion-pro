@@ -3,6 +3,7 @@ from weread2notionpro.notion_helper import NotionHelper
 from weread2notionpro.weread_api import WeReadApi
 from weread2notionpro import utils
 from weread2notionpro.config import book_properties_type_dict, tz
+import re
 
 TAG_ICON_URL = "https://www.notion.so/icons/tag_gray.svg"
 USER_ICON_URL = "https://www.notion.so/icons/user-circle-filled_gray.svg"
@@ -54,7 +55,15 @@ def insert_book_to_notion(books, index, bookId):
     if not cover or not cover.strip() or not cover.startswith("http"):
         cover = BOOK_ICON_URL
     if bookId not in notion_books:
-        book["书名"] = book.get("title")
+        # 微信读书的书名不太规范，只保留括号前的，括号部分不要了
+        title = book.get("title")
+        if title:
+            # 使用正则表达式查找中文括号
+            match = re.search(r'（', title)
+            if match:
+                # 如果找到中文括号，截取括号前的内容
+                title = title[:match.start()]
+        book["书名"] = title
         book["BookId"] = book.get("bookId")
         book["ISBN"] = book.get("isbn")
         book["链接"] = weread_api.get_url(bookId)
